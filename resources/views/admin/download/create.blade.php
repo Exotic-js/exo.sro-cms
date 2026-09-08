@@ -48,6 +48,23 @@
             </div>
 
             <div class="row mb-3">
+                <label for="category" class="col-lg-2 col-form-label text-md-end">{{ __('Category') }}</label>
+
+                <div class="col-lg-10">
+                    <select class="form-select" name="category" required>
+                        <option value="client" {{ old('category') === 'client' ? 'selected' : '' }}>Client</option>
+                        <option value="patches" {{ old('category') === 'patches' ? 'selected' : '' }}>Patches</option>
+                    </select>
+
+                    @error('category')
+                    <span class="invalid-feedback" role="alert">
+                        <strong>{{ $message }}</strong>
+                    </span>
+                    @enderror
+                </div>
+            </div>
+
+            <div class="row mb-3">
                 <label for="url" class="col-lg-2 col-form-label text-md-end">{{ __('Link') }}</label>
 
                 <div class="col-lg-10">

@@ -25,6 +25,7 @@
                     <tr>
                         <th scope="col">#</th>
                         <th scope="col">Name</th>
+                        <th scope="col">Category</th>
                         <th scope="col">Link</th>
                         <th scope="col">Options</th>
                     </tr>
@@ -34,6 +35,7 @@
                         <tr>
                             <td>{{ $row->id }}</td>
                             <td>{{ $row->name }}</td>
+                            <td><span class="badge text-bg-{{ $row->category === 'client' ? 'primary' : 'success' }}">{{ ucfirst($row->category) }}</span></td>
                             <td><a href="{{ $row->url }}" target="_blank">{{ $row->url }}</a></td>
                             <td>
                                 <a href="{{ route('admin.download.edit', $row->id) }}" class="btn btn-secondary btn-sm">Edit</a>
@@ -42,7 +44,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="4" class="text-center">No Records Found!</td>
+                            <td colspan="5" class="text-center">No Records Found!</td>
                         </tr>
                     @endforelse
                 </tbody>

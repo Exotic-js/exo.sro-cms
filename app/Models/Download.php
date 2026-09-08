@@ -15,6 +15,7 @@ class Download extends Model
         'desc',
         'url',
         'image',
+        'category',
     ];
 
     protected static function booted()

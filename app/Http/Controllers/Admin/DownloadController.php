@@ -27,6 +27,7 @@ class DownloadController extends Controller
             'desc' => 'nullable|string',
             'url' => 'required|url|max:2048',
             'image' => 'nullable|string|max:2048',
+            'category' => 'required|in:client,patches',
         ]);
 
         Download::create($validated);
@@ -46,6 +47,7 @@ class DownloadController extends Controller
             'desc' => 'nullable|string',
             'url' => 'required|url|max:2048',
             'image' => 'nullable|string|max:2048',
+            'category' => 'required|in:client,patches',
         ]);
 
         $download->update($validated);

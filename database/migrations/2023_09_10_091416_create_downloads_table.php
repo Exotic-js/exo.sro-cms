@@ -15,6 +15,7 @@ return new class extends Migration
             $table->increments('id');
             $table->string('name');
             $table->text('desc');
+            $table->string('category')->default('client');
             $table->string('url');
             $table->string('image')->nullable();
             $table->timestamps();
