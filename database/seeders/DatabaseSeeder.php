@@ -27,6 +27,7 @@ class DatabaseSeeder extends Seeder
         }
 
         $this->call(SettingSeeder::class);
+        $this->call(BattlePassSeeder::class);
 
         //$this->call(MagOptSeeder::class);
         //$this->call(ReferralSeeder::class);

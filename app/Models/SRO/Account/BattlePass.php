@@ -28,7 +28,7 @@ class BattlePass extends Model
      *
      * @var string
      */
-    protected $table = 'dbo.WEB_BattlePassRecords';
+    protected $table = 'dbo.WEB_BattlePass';
 
     /**
      * The table primary Key.
