@@ -31,6 +31,7 @@ return Application::configure(basePath: dirname(__DIR__))
             '/callback/*',
             '/webhook/*',
             '/postback/*',
+            '/game/*',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

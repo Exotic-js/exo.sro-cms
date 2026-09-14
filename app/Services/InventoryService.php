@@ -7,7 +7,9 @@ use App\Models\SRO\Shard\Chest;
 use App\Models\SRO\Shard\InvCOS;
 use App\Models\SRO\Shard\Inventory;
 use App\Models\SRO\Shard\InventoryForAvatar;
+use App\Models\SRO\Shard\RefObjCommon;
 use App\Models\SRO\Shard\TradeEquipInventory;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class InventoryService
@@ -57,6 +59,49 @@ class InventoryService
     {
         $inventory = InvCOS::getPetItems($CharID, $PetID, $max, $min);
         return $this->convertItemList($inventory);
+    }
+
+    /**
+     * Build a tooltip-ready item object from a _RefObjCommon ID.
+     */
+    public function getItemInfoByRefItem(int $refItemID, array $instance = []): ?object
+    {
+        $refItem = RefObjCommon::where('ID', $refItemID)->first();
+        if (!$refItem) {
+            return null;
+        }
+
+        $item = $refItem->newFromBuilder($refItem->getAttributes());
+
+        $item->MaxStack = DB::connection('shard')
+            ->table('_RefObjItem')
+            ->where('ID', $refItem->Link)
+            ->value('MaxStack') ?? 0;
+
+        $item->ID64 = $instance['ID64'] ?? 0;
+        $item->RefItemID = $refItemID;
+        $item->Serial64 = $instance['Serial64'] ?? 0;
+        $item->Slot = $instance['Slot'] ?? 0;
+        $item->Data = $instance['Data'] ?? 0;
+        $item->OptLevel = $instance['OptLevel'] ?? 0;
+        $item->nOptValue = $instance['nOptValue'] ?? 0;
+        $item->Variance = $instance['Variance'] ?? 0;
+
+        for ($i = 1; $i <= ($refItem->MagParamNum ?? 12); $i++) {
+            $item->{"MagParam{$i}"} = $instance["MagParam{$i}"] ?? 0;
+        }
+
+        $this->loadItemName($item);
+
+        return $this->processItem($item);
+    }
+
+    /**
+     * Load the localized display name for a single item.
+     */
+    private function loadItemName(object $item): void
+    {
+        $this->itemNames = ItemNameDesc::getItemNames([$item->NameStrID128] ?? []);
     }
 
     /**

@@ -1,0 +1,252 @@
+/* Coded by m1xawy */
+#progress {
+    position: relative;
+    width: auto;
+    height: 20px;
+    background: #2B2723;
+    margin: 0px 37px 10px 13px;
+    overflow: hidden;
+}
+.progress-bar {
+    height: 20px;
+    background: #00460c;
+}
+.progress-text {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 20px;
+    line-height: 20px;
+    text-align: center;
+    color: #E8CF9A;
+    font-weight: bold;
+}
+.hotshop .price:last-child {
+    padding: 3px 3px 3px 17px;
+}
+.hotshop .action .btn-ga {
+    display: block;
+    margin-right: 0px;
+}
+.btn-ga, .btn-ga a, .btn-ga button, .btn-ga input {
+    background: #BE8935 no-repeat;
+    color: #2B2011;
+}
+.btn-ga-cancel, .btn-ga-cancel a, .btn-ga-cancel button, .btn-ga-cancel input {
+    background: #917E60;
+}
+
+/* ===== PURCHASE PANEL - INLINE LAYOUT ===== */
+/* Purchase > __INPUT__ > Points on one centered line */
+.purchase-pass .buyitem {
+    display: block;
+    text-align: center;
+    margin: 8px 0;
+    zoom: 1;
+}
+.purchase-pass .buyitem .details {
+    display: inline;
+    text-align: center;
+    width: auto !important;
+    margin: 0 !important;
+    zoom: 1;
+}
+.purchase-pass .buyitem .details table {
+    display: inline;
+    width: auto !important;
+    margin: 0 4px;
+    zoom: 1;
+}
+.purchase-pass .buyitem .details tr {
+    display: inline;
+}
+.purchase-pass .buyitem .details td {
+    display: inline;
+    padding: 0 !important;
+}
+.purchase-pass .buyitem .details p {
+    display: inline;
+    margin: 0 2px;
+    vertical-align: middle;
+    line-height: 22px;
+}
+.purchase-pass .buyitem .details .qty {
+    display: inline;
+    vertical-align: middle;
+}
+.purchase-pass .buyitem .details .val {
+    display: inline;
+}
+.purchase-pass .buyitem .details input {
+    vertical-align: middle;
+    text-align: center;
+    height: 18px;
+    line-height: 18px;
+    width: 30px;
+}
+/* Ensure qty adjuster arrows stay inline */
+.purchase-pass .buyitem .details .ctrl {
+    display: inline-block;
+    vertical-align: middle;
+    margin-left: 2px;
+    float: none !important;
+    width: auto !important;
+}
+/* Override qtyAdj plugin wrapping for inline - CRITICAL */
+.purchase-pass .buyitem .details .setter {
+    display: inline !important;
+    float: none !important;
+    width: auto !important;
+}
+.purchase-pass .buyitem .details .cont {
+    display: inline !important;
+    margin-right: 0 !important;
+}
+/* Force the val container to be inline */
+.purchase-pass .buyitem .details .val {
+    display: inline;
+}
+/* Override any float behavior in the purchase panel context */
+.purchase-pass .buyitem .details * {
+    float: none !important;
+}
+
+.hotshop .action {
+    padding-top: 7px;
+    padding-bottom: 7px;
+}
+.mall-list .list .action .btn-ga {
+    margin-right: 0;
+}
+.mig .pagex {
+    margin: 5px 0;
+}
+.mig .pagex #page-numbers {
+    margin: 0 6px;
+}
+.mig .pagex #page-numbers a,
+.mig .pagex #page-numbers b {
+    margin: 0 3px;
+}
+
+/* ===== ITEM LIST CENTERING FIX ===== */
+.mall-list .list .intro {
+    position: relative;
+    width: 134px;
+    height: 85px;
+    padding: 10px 13px 5px 13px;
+    text-align: center;
+}
+/* Center the pic container and remove excessive top margin */
+.mall-list .list .pic {
+    position: relative;
+    top: 0;
+    left: 0;
+    width: auto;
+    display: block;
+    text-align: center;
+    margin-top: 0;
+}
+/* Center the image itself */
+.mall-list .list .pic img {
+    width: 45px;
+    height: 45px;
+    display: inline-block;
+    vertical-align: middle;
+}
+/* Center the name properly */
+.mall-list .list .intro .name {
+    display: block;
+    margin-top: 5px;
+    text-align: center;
+    width: 100%;
+}
+.mall-list .list .price {
+    text-align: center;
+}
+.purchase-pass-details img {
+    position: relative;
+    float: left;
+    width: 53px;
+    padding-left: 16px;
+}
+.hotshop .intro {
+    min-height: auto;
+    _height: auto;
+    padding: 6px 0 4px;
+}
+.mall-list .list .tag {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 38px;
+    height: 38px;
+    color: #fff;
+    font-weight: bold;
+    text-transform: uppercase;
+    background: url(images/item_sale_icon.png) no-repeat;
+}
+.mall-list .list .tag.tag-best {
+    background: url(images/item_best_icon.png) no-repeat;
+}
+
+/* Notification styles */
+.bp-notification {
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+}
+
+
+/* ===== INLINE QTY CONTROLS FOR PURCHASE PANEL ===== */
+/* Purchase > [1] [+][−] > Points */
+.purchase-pass .qty-inline {
+    display: inline;
+    vertical-align: middle;
+    margin: 0 4px;
+}
+.purchase-pass .qty-inline input {
+    width: 24px;
+    height: 16px;
+    text-align: center;
+    vertical-align: middle;
+    border: 0;
+    background-color: #12110F;
+    color: #B4A680;
+    font-size: 11px;
+    line-height: 16px;
+}
+/* Arrow container - stacks + and - vertically to the right of input */
+.purchase-pass .qty-arrows {
+    display: inline-block;
+    vertical-align: middle;
+    width: 16px;
+    margin-left: 2px;
+}
+.purchase-pass .qty-plus,
+.purchase-pass .qty-minus {
+    display: block;
+    width: 16px;
+    height: 8px;
+    cursor: pointer;
+    background: url('property/silkroad/silkroadonline_3/item_img/ingame_img/btn_qty_control_bg.gif') no-repeat;
+}
+.purchase-pass .qty-plus {
+    background-position: 0 0;
+}
+.purchase-pass .qty-minus {
+    background-position: 0 -8px;
+}
+
+/* modal */
+.modal { position:fixed; background: url(property/silkroad/silkroadonline_3/item_img/ingame_img/modal_bg.png) repeat-x left top; display:none; z-index:1; margin:0px; padding:0px; left:0; top:0; width:800px; height:569px; }
+.modal .alert_window { margin:200px auto; width:400px; height:180px; overflow:hidden; background:url(property/silkroad/silkroadonline_3/item_img/ingame_img/modal_window_400x180_new.png) no-repeat;}
+.modal .alert_title { width:305px; max-height:26px; margin:8px auto; text-align:center; padding:0px; font-size:12px; color:#E8CF9A;; }
+.modal .alert_content { width:381px; height:116px; margin:0 auto; text-align:center; font-size:12px; color:white; }
+.modal .alert_content .contents { margin:0 auto; text-align:center; font-size:12px; color:#AB9770;; }
+.modal .alert_footer { width:305px; height:30px; margin:0 auto; text-align:center; }
+.modal .alert_button { width:85px; height:24px; margin-top:3px; padding-top:0px; background:url(property/silkroad/silkroadonline_3/item_img/ingame_img/modal_button_new.png) no-repeat center; color:#C7AD7B;;}
+
+/* item tooltip */
+#bp-tooltip { display:none; position:fixed; text-align:left; font-size:12px; width:300px; min-height:200px; background-color:rgba(28,30,52,.8); color:#fff; padding:6px; border:1px solid #808bba; border-radius:5px; box-shadow:none; z-index:999; overflow:auto; }
+#bp-tooltip img { display:inline-block; }

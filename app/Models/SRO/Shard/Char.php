@@ -2,12 +2,17 @@
 
 namespace App\Models\SRO\Shard;
 
+use App\Models\SRO\Account\WebItemCertifyKey;
+use App\Models\SRO\Guard\MaxiGuard\HwidList;
+use App\Models\SRO\Guard\VanGuard\GameServerWebAppsKeys;
+use App\Models\SRO\Guard\VPlus\OnlinePlayer;
 use App\Models\SRO\Log\LogChatMessage;
 use App\Models\SRO\Log\LogEventChar;
 use App\Models\SRO\Log\LogInstanceWorldInfo;
 use App\Services\InventoryService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
@@ -392,7 +397,7 @@ class Char extends Model
         return $this->belongsTo(Guild::class, 'GuildID', 'ID');
     }
 
-    public function addItem(string $itemCode, int $quantity = 1, int $type = 1): int
+public function addItem(string $itemCode, int $quantity = 1, int $type = 1): int
     {
         try {
             $result = DB::connection($this->getConnectionName())->selectOne(
@@ -407,6 +412,145 @@ class Char extends Model
             return -1;
         } catch (\Exception $e) {
             return -1;
+        }
+    }
+
+    private function addItemToChest(int $itemID, int $quantity, string $itemCode): void
+    {
+        try {
+            $jid = $this->JID;
+            if (!$jid) {
+                throw new \InvalidArgumentException('Character not found in _User');
+            }
+
+            $accountPdo = DB::connection('account')->getPdo();
+
+            $stmt1 = $accountPdo->prepare("INSERT INTO WEB_ITEM_GIVE_LIST VALUES (:jid, 64, :charid, 130, :itemcode, NULL, 'SN_' + :itemcodestr, 1, 0, 0, 0, 0, 0, 'Web', 0, GETDATE(), NULL, NULL, NULL)");
+            $stmt1->execute([
+                ':jid' => $jid,
+                ':charid' => $this->CharID,
+                ':itemcode' => $itemCode,
+                ':itemcodestr' => $itemCode,
+            ]);
+
+            $identity = (int) $accountPdo->lastInsertId();
+
+            $shardPdo = DB::connection('shard')->getPdo();
+            $stmt2 = $shardPdo->prepare("INSERT INTO _BuyCashItemList_By_Web VALUES (:id, :jid2, 1, 'SN_' + :itemcodestr2, :count, :itemid, :totalcount, GETDATE(), NULL, NULL, NULL, NULL, NULL, NULL)");
+            $stmt2->execute([
+                ':id' => $identity,
+                ':jid2' => $jid,
+                ':itemcodestr2' => $itemCode,
+                ':count' => $quantity,
+                ':itemid' => $itemID,
+                ':totalcount' => $quantity,
+            ]);
+        } catch (\InvalidArgumentException $e) {
+            throw $e;
+        } catch (\Exception $e) {
+            throw new \InvalidArgumentException($e->getMessage());
+        }
+    }
+
+    public function deliverItem(int $itemID, int $quantity): bool
+    {
+        $itemCode = RefObjCommon::find($itemID)?->codeName;
+        if (!$itemCode) {
+            throw new \InvalidArgumentException('Unknown item');
+        }
+
+        switch (strtolower(config('global.server.guard', 'isro'))) {
+            case 'maxiguard':
+                HwidList::addItemToChest($this->CharName16, $itemCode, $quantity);
+                break;
+
+            case 'vplus':
+                OnlinePlayer::addItemToChest($this->CharID, $itemID, $quantity);
+                break;
+
+            case 'vanguard':
+                GameServerWebAppsKeys::addItemViaShardManager($this->CharID, $itemID, $quantity);
+                break;
+
+            case 'none':
+                $returnCode = $this->addItem($itemCode, $quantity);
+                $errorMessages = [
+                    1  => 'Success',
+                    -1 => 'Unknown item',
+                    -2 => 'Character does not exist',
+                    -3 => 'Inventory is full',
+                    -4 => 'Item ID is NULL',
+                    -5 => 'Item reference link is NULL',
+                    -6 => 'Not an item',
+                    -7 => 'Failed for unknown reason',
+                ];
+                if ($returnCode !== 1) {
+                    throw new \InvalidArgumentException($errorMessages[$returnCode] ?? 'Unknown error code: ' . $returnCode);
+                }
+                break;
+
+            case 'isro':
+            default:
+                $this->addItemToChest($itemID, $quantity, $itemCode);
+                break;
+        }
+
+        return true;
+    }
+
+    public static function resolveCharname(Request $request): ?string
+    {
+        $guardSystem = strtolower(config('global.server.guard', 'isro'));
+
+        switch ($guardSystem) {
+            case 'maxiguard':
+                $token = $request->query('webtoken');
+
+                return $token ? HwidList::resolveCharnameFromToken($token) : null;
+
+            case 'vplus':
+                $token = $request->header('X-Session-Token');
+
+                return $token ? OnlinePlayer::resolveCharnameFromToken($token) : null;
+
+            case 'vanguard':
+                $key = $request->query('key');
+
+                return $key ? GameServerWebAppsKeys::resolveCharnameFromKey($key) : null;
+
+            case 'none':
+                $charname = $request->query('charname');
+                if (empty($charname)) {
+                    return null;
+                }
+
+                // Verify the character actually exists in the _Char table
+                return self::where('CharName16', $charname)->exists() ? $charname : null;
+
+            case 'isro':
+            default:
+                $jid = $request->query('jid');
+                $key = $request->query('key');
+                if (empty($jid) || empty($key)) {
+                    return null;
+                }
+
+                $certifyKeyRecord = WebItemCertifyKey::getCertifyKey($jid);
+                if (!$certifyKeyRecord) {
+                    return null;
+                }
+
+                $generatedKey = strtoupper(md5($jid . $certifyKeyRecord->Certifykey . config('global.server.saltKey')));
+                if ($generatedKey !== strtoupper($key)) {
+                    return null;
+                }
+
+                return DB::connection('shard')
+                    ->table('_Char as c')
+                    ->join('_User as u', 'c.CharID', '=', 'u.CharID')
+                    ->where('u.UserJID', $jid)
+                    ->orderByDesc('c.LastLogout')
+                    ->value('c.CharName16');
         }
     }
 }
