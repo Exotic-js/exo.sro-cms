@@ -4,7 +4,6 @@ namespace App\Http\Controllers\InGame;
 
 use App\Http\Controllers\Controller;
 use App\Models\SRO\Account\BattlePass;
-use App\Models\SRO\Account\TbUser;
 use App\Models\SRO\Shard\Char;
 use App\Services\InventoryService;
 use Illuminate\Http\Request;
@@ -183,7 +182,7 @@ class BattlePassController extends Controller
                 return response()->json(['success' => false, 'message' => 'Unable to get JID for this character'], 422);
             }
 
-            $silk = (int) (TbUser::find($jid)?->muUser?->getSilk?->PremiumSilk ?? 0);
+            $silk = BattlePass::getSilk($jid);
 
             return response()->json([
                 'success' => true,

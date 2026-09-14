@@ -13,6 +13,9 @@ return [
         'premium_price' => 500,
         'points_per_purchase' => 1,
         'silk_per_point' => 1,
+        // Silk type used to buy/upgrade: null = auto (vSRO: 0 = silk_own, iSRO: 3 = PremiumSilk)
+        // iSRO options: 3 = PremiumSilk, 1 = Silk | vSRO options: 0 = silk_own, 1 = silk_gift, 2 = silk_point
+        'silk_type' => null,
 
         // Battle Pass tiers (level = position in array, id must be unique)
         'tiers' => [

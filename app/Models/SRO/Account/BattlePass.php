@@ -61,6 +61,55 @@ class BattlePass extends Model
     ];
 
     // ============================================================
+    // SILK HELPERS
+    // ============================================================
+
+    /**
+     * Resolve which silk type the battle pass spends.
+     * null in config = auto select per server version.
+     */
+    public static function silkType(): int
+    {
+        $configured = config('ingame.battlepass.silk_type');
+        if ($configured !== null) {
+            return (int) $configured;
+        }
+
+        return config('global.server.version') === 'vSRO' ? 0 : 3;
+    }
+
+    public static function getSilk(int $jid, ?int $type = null): int
+    {
+        $type = $type ?? self::silkType();
+
+        if (config('global.server.version') === 'vSRO') {
+            $silk = TbUser::find($jid)?->getSilk;
+
+            return match ($type) {
+                1 => (int) ($silk?->silk_gift ?? 0),
+                2 => (int) ($silk?->silk_point ?? 0),
+                default => (int) ($silk?->silk_own ?? 0),
+            };
+        }
+
+        $silk = TbUser::find($jid)?->muUser?->getSilk;
+
+        return match ($type) {
+            1 => (int) ($silk?->Silk ?? 0),
+            default => (int) ($silk?->PremiumSilk ?? 0),
+        };
+    }
+
+    /**
+     * Invalidate the cached silk accessors after a balance change.
+     */
+    public static function forgetSilkCache(int $jid): void
+    {
+        Cache::forget("tb_user_silk_{$jid}");
+        Cache::forget("mu_user_silk_{$jid}");
+    }
+
+    // ============================================================
     // TIER DEFINITIONS (from config/ingame.php)
     // ============================================================
 
@@ -267,15 +316,16 @@ class BattlePass extends Model
         }
 
         $premiumPrice = (int) config('ingame.battlepass.premium_price');
-        $currentSilk = (int) (TbUser::find($jid)?->muUser?->getSilk?->PremiumSilk ?? 0);
+        $currentSilk = self::getSilk($jid);
         if ($currentSilk < $premiumPrice) {
             throw new \InvalidArgumentException('Insufficient Silk amount. You need ' . $premiumPrice . ' Silk.');
         }
 
-        TbUser::updateSilk($jid, 3, -$premiumPrice);
+        TbUser::updateSilk($jid, self::silkType(), -$premiumPrice);
+        self::forgetSilkCache($jid);
         $record->update(['IsPremium' => 1]);
 
-        return $currentSilk - $premiumPrice;
+        return self::getSilk($jid);
     }
 
     public static function purchasePoints(int $charID, int $qty): int
@@ -294,15 +344,16 @@ class BattlePass extends Model
         $pointsPerPurchase = (int) config('ingame.battlepass.points_per_purchase');
         $silkPerPoint = (int) config('ingame.battlepass.silk_per_point');
         $totalCost = $qty * $silkPerPoint;
-        $currentSilk = (int) (TbUser::find($jid)?->muUser?->getSilk?->PremiumSilk ?? 0);
+        $currentSilk = self::getSilk($jid);
         if ($currentSilk < $totalCost) {
             throw new \InvalidArgumentException('Insufficient Silk amount. You need ' . $totalCost . ' Silk.');
         }
 
-        TbUser::updateSilk($jid, 3, -$totalCost);
+        TbUser::updateSilk($jid, self::silkType(), -$totalCost);
+        self::forgetSilkCache($jid);
         $record->increment('Points', $qty * $pointsPerPurchase);
 
-        return $currentSilk - $totalCost;
+        return self::getSilk($jid);
     }
 
     public static function addPoints(int $charID, int $points): bool
