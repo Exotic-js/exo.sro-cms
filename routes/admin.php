@@ -27,6 +27,8 @@ Route::middleware(['auth', 'admin'])->group(function () {
         Route::get('/widgets', [SettingController::class, 'widgets'])->name('settings.widgets');
         Route::get('/donate', [SettingController::class, 'donate'])->name('settings.donate');
         Route::get('/ranking', [SettingController::class, 'ranking'])->name('settings.ranking');
+        Route::get('/webapps', [SettingController::class, 'webApps'])->name('settings.webapps');
+        Route::get('/item-lookup', [SettingController::class, 'itemLookup'])->name('settings.item-lookup');
         Route::post('/settings', [SettingController::class, 'update'])->name('settings.update');
         Route::post('/settings/clear-cache', [SettingController::class, 'clearCache'])->name('settings.clear-cache');
 

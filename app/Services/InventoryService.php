@@ -73,10 +73,13 @@ class InventoryService
 
         $item = $refItem->newFromBuilder($refItem->getAttributes());
 
-        $item->MaxStack = DB::connection('shard')
+        $refItemData = DB::connection('shard')
             ->table('_RefObjItem')
             ->where('ID', $refItem->Link)
-            ->value('MaxStack') ?? 0;
+            ->first();
+
+        $item->MaxStack = $refItemData->MaxStack ?? 0;
+        $item->ItemClass = $refItemData->ItemClass ?? 0;
 
         $item->ID64 = $instance['ID64'] ?? 0;
         $item->RefItemID = $refItemID;

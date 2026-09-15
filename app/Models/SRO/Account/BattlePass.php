@@ -71,7 +71,7 @@ class BattlePass extends Model
     public static function silkType(): int
     {
         $configured = config('ingame.battlepass.silk_type');
-        if ($configured !== null) {
+        if (is_int($configured) || (is_string($configured) && $configured !== '' && is_numeric($configured))) {
             return (int) $configured;
         }
 

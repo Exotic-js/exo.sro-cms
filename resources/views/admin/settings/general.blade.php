@@ -104,6 +104,26 @@
                         <input type="number" class="form-control" name="max_level" value="{{ $settings['max_level'] ?? '' }}" min="1">
                     </div>
 
+                    <div class="mb-3">
+                        <label class="form-label">{{ __('Server Version') }}</label>
+                        <input type="text" class="form-control" value="{{ $server['version'] ?? config('global.server.version') }}" disabled>
+                        <div class="form-text">{{ __('Read-only. Server version is controlled by SRO_VERSION in the .env file.') }}</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ __('Guard') }}</label>
+                        <select class="form-select" name="server[guard]">
+                            @php $guardValue = $server['guard'] ?? config('global.server.guard'); @endphp
+                            @foreach(['isro', 'none', 'maxiguard', 'vplus', 'vanguard'] as $guardOption)
+                                <option value="{{ $guardOption }}" {{ (string) $guardValue === $guardOption ? 'selected' : '' }}>{{ $guardOption }}</option>
+                            @endforeach
+                        </select>
+                        <div class="form-text">{{ __("Login guard used by the in-game web apps (isro = jid+key, none = charname, MaxiGuard/vPlus/Vanguard).") }}</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ __('Salt Key') }}</label>
+                        <input type="text" class="form-control" name="server[saltKey]" value="{{ $server['saltKey'] ?? config('global.server.saltKey') }}">
+                    </div>
+
                     <h5 class="fw-semibold mb-3 mt-4">{{ __('Appearance') }}</h5>
 
                     <div class="mb-3">

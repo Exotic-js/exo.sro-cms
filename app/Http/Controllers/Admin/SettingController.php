@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
+use App\Models\SRO\Shard\RefObjCommon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Cache;
 
 class SettingController extends Controller
 {
@@ -70,6 +72,66 @@ class SettingController extends Controller
         return view('admin.settings.ranking', $this->viewContext());
     }
 
+    public function webApps(): \Illuminate\View\View
+    {
+        $data = Setting::cached()->toArray();
+
+        return view('admin.settings.webapps', [
+            'battlepass' => $this->mergeJsonSetting($data, 'battlepass', config('ingame.battlepass', [])),
+        ]);
+    }
+
+    /**
+     * Lookup items by code name in _RefObjCommon (admin panel item search).
+     * Accepts ?q= (partial code-name search) or ?id= (exact RefObjCommon ID).
+     */
+    public function itemLookup(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $inventoryService = app(\App\Services\InventoryService::class);
+
+        $rows = [];
+        $id = (int) $request->query('id');
+        if ($id > 0) {
+            $row = RefObjCommon::where('ID', $id)->first();
+            if ($row) {
+                $rows[] = $row;
+            }
+        } else {
+            $q = trim((string) $request->query('q', ''));
+            if ($q === '') {
+                return response()->json([]);
+            }
+
+            $escaped = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $q);
+
+            $rows = RefObjCommon::whereRaw("CodeName128 LIKE ? ESCAPE '\\'", ["%{$escaped}%"])
+                ->whereExists(function ($query) {
+                    $query->selectRaw('1')
+                        ->from('dbo._RefObjItem')
+                        ->whereColumn('dbo._RefObjCommon.Link', 'ID');
+                })
+                ->orderByRaw('CASE WHEN CodeName128 = ? THEN 0 ELSE 1 END', [$q])
+                ->orderBy('CodeName128')
+                ->limit(20)
+                ->get()
+                ->all();
+        }
+
+        $items = [];
+        foreach ($rows as $row) {
+            $infoItem = $inventoryService->getItemInfoByRefItem((int) $row->ID);
+
+            $items[] = [
+                'id' => (int) $row->ID,
+                'codeName' => (string) $row->CodeName128,
+                'name' => $infoItem?->ItemInfo->ItemName ?? 'Unknown Item',
+                'icon' => $infoItem ? preg_replace('/\.png$/i', '', (string) $infoItem->ImgPath) : '',
+            ];
+        }
+
+        return response()->json($items);
+    }
+
     public function update(Request $request): RedirectResponse
     {
         abort_unless(auth()->user()?->role?->is_admin, 403);
@@ -90,6 +152,8 @@ class SettingController extends Controller
         $donate = $this->getJsonSetting('donate', config('donate', []));
         $widgets = $this->getJsonSetting('widgets', config('widgets', []));
         $history = $this->getJsonSetting('history', config('global.logs', []));
+        $server = $this->getJsonSetting('server', config('global.server', []));
+        $battlepass = $this->getJsonSetting('battlepass', config('ingame.battlepass', []));
 
         $toSave = [];
 
@@ -123,6 +187,34 @@ class SettingController extends Controller
                 continue;
             }
 
+            if ($key === 'server') {
+                if (is_array($value)) {
+                    $server = array_merge($server, $value);
+                } else {
+                    $decoded = json_decode((string) $value, true);
+                    if (is_array($decoded)) {
+                        $server = array_merge($server, $decoded);
+                    }
+                }
+
+                continue;
+            }
+
+            if ($key === 'battlepass') {
+                if (is_array($value) || is_string($value)) {
+                    $decoded = is_array($value) ? $value : json_decode((string) $value, true);
+                    if (is_array($decoded)) {
+                        // Re-key tiers by position so ids stay unique/sequential after row adds/removes
+                        if (isset($decoded['tiers']) && is_array($decoded['tiers'])) {
+                            $decoded['tiers'] = $this->normalizeTiers($decoded['tiers']);
+                        }
+                        $battlepass = array_merge($battlepass, $decoded);
+                    }
+                }
+
+                continue;
+            }
+
             // Scalar fields (General tab direct name= attributes) and other JSON blobs
             $toSave[$key] = is_array($value) ? json_encode($value) : $value;
         }
@@ -130,11 +222,47 @@ class SettingController extends Controller
         $toSave['donate'] = json_encode($donate);
         $toSave['widgets'] = json_encode($widgets);
         $toSave['history'] = json_encode($history);
+        $toSave['server'] = json_encode($server);
+        $toSave['battlepass'] = json_encode($battlepass);
 
         Setting::saveMany($toSave);
         Setting::flushCache();
+        Cache::forget('battle_pass_tiers');
 
         return back()->with('success', __('Settings updated successfully.'));
+    }
+
+    /**
+     * Sanitize submitted battle pass tiers into a clean indexed list:
+     * positional order defines level, ids are re-numbered 1..N.
+     */
+    private function normalizeTiers(array $tiers): array
+    {
+        $clean = [];
+        $position = 0;
+
+        foreach ($tiers as $tier) {
+            if (! is_array($tier)) {
+                continue;
+            }
+
+            $position++;
+
+            $clean[] = [
+                'id' => $position,
+                'points' => max(0, (int) ($tier['points'] ?? 0)),
+                'free_item' => [
+                    'id' => max(0, (int) ($tier['free_item']['id'] ?? 0)),
+                    'qty' => max(1, (int) ($tier['free_item']['qty'] ?? 1)),
+                ],
+                'vip_item' => [
+                    'id' => max(0, (int) ($tier['vip_item']['id'] ?? 0)),
+                    'qty' => max(1, (int) ($tier['vip_item']['qty'] ?? 1)),
+                ],
+            ];
+        }
+
+        return $clean;
     }
 
     public function clearCache(): RedirectResponse
@@ -165,6 +293,7 @@ class SettingController extends Controller
             'appUrl' => config('app.url'),
             'appName' => config('app.name'),
 
+            'server' => $this->mergeJsonSetting($data, 'server', config('global.server', [])),
             'referral' => $this->mergeJsonSetting($data, 'referral', config('global.referral', [])),
             'tickets' => $this->mergeJsonSetting($data, 'tickets', config('global.tickets', [])),
             'sliders' => $this->mergeJsonSetting($data, 'sliders', config('global.slider', [])),

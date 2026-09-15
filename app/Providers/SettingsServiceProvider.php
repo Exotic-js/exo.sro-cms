@@ -38,6 +38,8 @@ class SettingsServiceProvider extends ServiceProvider
             $this->applyJsonConfig($settings, 'sliders', 'global.slider');
             $this->applyJsonConfig($settings, 'footer', 'global.footer');
             $this->applyJsonConfig($settings, 'cache', 'global.cache');
+            $this->applyJsonConfig($settings, 'server', 'global.server');
+            $this->applyBattlePassSettings($settings);
         } catch (\Throwable) {
             // Database not ready (e.g. during migrations) — silently skip.
         }
@@ -58,7 +60,7 @@ class SettingsServiceProvider extends ServiceProvider
         // This catches dynamic keys like item_stats_jid_2, job_name_jid_2, verify_jid_2
         foreach ($settings as $key => $value) {
             // Skip known JSON blob keys — they're handled by applyJsonConfig
-            $jsonKeys = ['donate', 'widgets', 'ranking', 'history', 'referral', 'tickets', 'sliders', 'footer', 'mail', 'captcha', 'vote', 'cache', 'whatsapp'];
+            $jsonKeys = ['donate', 'widgets', 'ranking', 'history', 'referral', 'tickets', 'sliders', 'footer', 'mail', 'captcha', 'vote', 'cache', 'whatsapp', 'server', 'battlepass'];
             if (in_array($key, $jsonKeys, true)) {
                 continue;
             }
@@ -253,6 +255,29 @@ class SettingsServiceProvider extends ServiceProvider
         }
 
         Config::set('widgets.event_schedule', $saved);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Battle Pass (special handling — empty tiers list must be respected)
+    |-------------------------------------------------------------------------- */
+
+    private function applyBattlePassSettings(array $settings): void
+    {
+        $decoded = $this->decodeJson($settings['battlepass'] ?? null);
+        if (empty($decoded)) {
+            return;
+        }
+
+        $defaults = config('ingame.battlepass', []);
+        $merged = array_replace_recursive($defaults, $decoded);
+
+        // Tiers is an explicit list — once saved (even empty), it overrides config defaults.
+        if (array_key_exists('tiers', $decoded)) {
+            $merged['tiers'] = $decoded['tiers'];
+        }
+
+        Config::set('ingame.battlepass', $merged);
     }
 
     /*

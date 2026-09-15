@@ -126,6 +126,12 @@
                     {{ __('Ranking') }}
                 </a>
             </li>
+            <li class="nav-item">
+                <a class="nav-link d-flex align-items-center gap-2 {{ request()->routeIs('admin.settings.webapps') ? 'active' : '' }}" href="{{ route('admin.settings.webapps') }}">
+                    <svg class="bi" aria-hidden="true"><use xlink:href="#gear-wide-connected"/></svg>
+                    {{ __('Web Apps') }}
+                </a>
+            </li>
         </ul>
     </div>
 </div>

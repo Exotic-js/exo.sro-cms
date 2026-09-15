@@ -8,8 +8,8 @@
 // ============================================================
 var BP_CONFIG = {
     API_BASE: '/game/battlepass',
-    ITEM_ICON_BASE: '/in-game/battle-pass/sro/',
-    DEFAULT_ICON: '/in-game/battle-pass/sro/icon_default.png',
+    ITEM_ICON_BASE: '/images/sro/',
+    DEFAULT_ICON: '/images/sro/icon_default.png',
     SILK_ICON: '/in-game/battle-pass/images/points.png',
     PREMIUM_SILK_ICON: '/in-game/battle-pass/images/silk.png',
     REFRESH_INTERVAL: 30000,
