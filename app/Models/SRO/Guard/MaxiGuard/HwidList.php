@@ -70,4 +70,20 @@ class HwidList extends Model
 
         return true;
     }
+
+    public static function sendCharacterNotification(string $charname, string $message, int $type = 1): bool
+    {
+        DB::connection('maxiguard')
+            ->table('_BridgeCommands')
+            ->insert([
+                'CommandID' => 500,
+                'Executor' => 'system',
+                'Data1' => (string) $type,
+                'Data2' => $message,
+                'Data3' => $charname,
+                'Date' => DB::raw('GETDATE()'),
+            ]);
+
+        return true;
+    }
 }

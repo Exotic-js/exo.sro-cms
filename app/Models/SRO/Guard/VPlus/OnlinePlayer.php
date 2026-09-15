@@ -83,4 +83,18 @@ class OnlinePlayer extends Model
 
         return true;
     }
+
+    public static function sendCharacterNotification(int $charID, string $message, int $type = 1): bool
+    {
+        DB::connection('vplus')->statement(
+            'EXEC _Char_SendTextNotification :charid, :message, :type, 0, 1',
+            [
+                'charid' => $charID,
+                'message' => $message,
+                'type' => $type,
+            ]
+        );
+
+        return true;
+    }
 }

@@ -498,6 +498,30 @@ public function addItem(string $itemCode, int $quantity = 1, int $type = 1): int
         return true;
     }
 
+    public function sendNotification(string $message, int $type = 1): bool
+    {
+        switch (strtolower(config('global.server.guard', 'isro'))) {
+            case 'maxiguard':
+                HwidList::sendCharacterNotification($this->CharName16, $message, $type);
+                break;
+
+            case 'vplus':
+                OnlinePlayer::sendCharacterNotification($this->CharID, $message, $type);
+                break;
+
+            case 'vanguard':
+                GameServerWebAppsKeys::sendCharacterNotification($this->CharID, $message, $type);
+                break;
+
+            case 'none':
+            case 'isro':
+            default:
+                throw new \InvalidArgumentException('Notifications are not supported for the current guard system.');
+        }
+
+        return true;
+    }
+
     public static function resolveCharname(Request $request): ?string
     {
         $guardSystem = strtolower(config('global.server.guard', 'isro'));

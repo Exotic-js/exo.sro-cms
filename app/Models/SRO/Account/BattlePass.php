@@ -65,6 +65,18 @@ class BattlePass extends Model
     // ============================================================
 
     /**
+     * Fire an in-game notification to a character without breaking the action.
+     */
+    private static function notifyCharacter(int $charID, string $message, int $type = 1): void
+    {
+        try {
+            Char::findOrFail($charID)->sendNotification($message, $type);
+        } catch (\Throwable $e) {
+            logger()->warning('BattlePass character notification failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Resolve which silk type the battle pass spends.
      * null in config = auto select per server version.
      */
@@ -296,6 +308,9 @@ class BattlePass extends Model
 
         $record->update(['ClaimedItems' => $newClaimed]);
 
+        $itemName = ($claimType === 'vip') ? $targetTier['vipItem']['name'] : $targetTier['freeItem']['name'];
+        self::notifyCharacter($charID, "Claimed x{$quantity} {$itemName}", 1);
+
         return $record;
     }
 
@@ -325,6 +340,8 @@ class BattlePass extends Model
         self::forgetSilkCache($jid);
         $record->update(['IsPremium' => 1]);
 
+        self::notifyCharacter($charID, 'Premium Pass activated!', 1);
+
         return self::getSilk($jid);
     }
 
@@ -353,6 +370,8 @@ class BattlePass extends Model
         self::forgetSilkCache($jid);
         $record->increment('Points', $qty * $pointsPerPurchase);
 
+        self::notifyCharacter($charID, "Purchased {$qty}x points for the Battle Pass!", 1);
+
         return self::getSilk($jid);
     }
 
@@ -364,6 +383,12 @@ class BattlePass extends Model
 
         $record = self::getOrCreateForChar($charID);
 
-        return (bool) $record->increment('Points', $points);
+        $result = (bool) $record->increment('Points', $points);
+
+        if ($result) {
+            self::notifyCharacter($charID, "+{$points} Battle Pass points added!", 1);
+        }
+
+        return $result;
     }
 }

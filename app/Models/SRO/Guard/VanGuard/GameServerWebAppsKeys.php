@@ -109,6 +109,20 @@ class GameServerWebAppsKeys extends Model
         }
     }
 
+    public static function sendCharacterNotification(int $charID, string $message, int $type = 0): bool
+    {
+        DB::connection('vanguard')->statement(
+            'EXEC _ShardManagerSendNotice :charid, :type, :message',
+            [
+                'charid' => $charID,
+                'type' => $type,
+                'message' => $message,
+            ]
+        );
+
+        return true;
+    }
+
     public static function updateSilkAmount(int $jid, int $amount): bool
     {
         try {
