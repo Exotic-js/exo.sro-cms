@@ -67,13 +67,7 @@
                         <td>{{ $row->amount }}</td>
                         <td>{{ $row->value }}</td>
                         <td>{{ $row->updated_at->format('Y-m-d H:i:s') }}</td>
-                        <td>
-                            @if($row->status)
-                                <span class="text-success">Success<span>
-                            @else
-                                <span class="text-danger">Failed</span>
-                            @endif
-                        </td>
+                        <td>{{ $row->status }}</td>
                     </tr>
                 @empty
                     <tr>

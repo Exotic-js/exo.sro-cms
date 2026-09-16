@@ -438,14 +438,20 @@ class DonateService
             return back()->withErrors(['fawaterk' => 'Payment Failed: An error occurred'])->withInput();
         }
 
-        Donate::log([
+        $existing = Donate::where('transaction_id', (string) $response->json('data.invoiceId'))->first();
+        if ($existing && $existing->status === 'success') {
+            return back()->withErrors(['fawaterk' => 'This invoice was already paid.'])->withInput();
+        }
+
+        Donate::updateOrCreate(['transaction_id' => (string) $response->json('data.invoiceId')], [
             'method' => 'Fawaterk',
-            'transaction_id' => $response->json('data.invoiceId'),
             'status' => 'pending',
             'amount' => $package['price'],
             'type' => $package['type'],
             'value' => $package['value'],
+            'desc' => '',
             'jid' => $user->jid,
+            'ip' => request()->ip() ?? null,
         ]);
 
         return redirect()->away($response->json('data.url'));
@@ -473,7 +479,7 @@ class DonateService
     public function webhookFawaterk(Request $request)
     {
         $config = config('donate.fawaterk');
-        $data = $request->json()->all();
+        $data = $request->all();
 
         if (!$data) {
             return response('Invalid payload', 400);
