@@ -32,6 +32,21 @@
                 {{-- ===================== BATTLE PASS ===================== --}}
                 <div class="tab-pane fade show active" id="tab-battlepass" role="tabpanel">
 
+                    <div class="alert alert-info">
+                        <strong>{{ __('Battle Pass URL:') }}</strong>
+                        <code>{{ route('game.battlepass') }}</code>
+                    </div>
+
+                    <div class="mb-4">
+                        <strong>{{ __('Web Interface Setup Guide') }}</strong>
+                        <ul>
+                            <li>MaxiGuard: <a href="https://docs.google.com/document/d/1ywAYnDzTpjn5SeCv8x0Sxtt_DnLTptOWoHy5gOnK4Cg/view#heading=h.4mspqsvgq5vi" target="_blank">https://docs.google.com/document/d/1ywAYnDzTpjn5SeCv8x0Sxtt_DnLTptOWoHy5gOnK4Cg/view#heading=h.4mspqsvgq5vi</a></li>
+                            <li>vPlus: <a href="https://vsroplus.com/helpcenter/features/webinterface" target="_blank">https://vsroplus.com/helpcenter/features/webinterface</a></li>
+                            <li>Vanguard: <a href="https://vanguard-r.online/wiki/article/63" target="_blank">https://vanguard-r.online/wiki/article/63</a></li>
+                            <li>iSRO: In media pk2 / type.txt set <code>WebMallAddr = "yourdomain.com/gateway.asp"</code></li>
+                        </ul>
+                    </div>
+
                     <h5 class="fw-semibold mb-3">{{ __('Battle Pass Settings') }}</h5>
 
                     <div class="mb-3">
