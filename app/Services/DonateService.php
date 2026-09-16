@@ -71,7 +71,9 @@ class DonateService
             return back()->withErrors(['paypal' => 'Payment Failed: Approval link not found.'])->withInput();
         }
 
-        return redirect()->away($approvalLink['href']);
+        $separator = str_contains($approvalLink['href'], '?') ? '&' : '?';
+
+        return redirect()->away($approvalLink['href'] . $separator . 'useraction=commit');
     }
 
     public function callbackPaypal(Request $request)
@@ -137,7 +139,10 @@ class DonateService
             return back()->withErrors(['paypal' => 'Invalid package amount: $' . $paidAmount])->withInput();
         }
 
-        $customId = $order['purchase_units'][0]['custom_id'] ?? null;
+        $customId = $orderResponse->json('purchase_units.0.custom_id')
+            ?? $order['purchase_units'][0]['custom_id']
+            ?? $order['purchase_units'][0]['payments']['captures'][0]['custom_id']
+            ?? null;
         if (!$customId) {
             return back()->withErrors(['paypal' => 'Unable to identify user.'])->withInput();
         }
